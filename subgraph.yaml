@@ -16,14 +16,12 @@ dataSources:
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
+        - Account
         - Transfer
-        - Approval
       abis:
         - name: Contract
           file: ./abis/Contract.json
       eventHandlers:
-        - event: Transfer(indexed address,indexed address,uint256)
+        - event: Transfer(indexed address, indexed address, uint256)
           handler: handleTransfer
-        - event: Approval(indexed address,indexed address,uint256)
-          handler: handleApproval
       file: ./src/contract.ts
