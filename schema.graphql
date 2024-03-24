@@ -9,7 +9,7 @@ type Transfer @entity(immutable: true) {
   timestamp: BigInt!
 }
 
-type Account {
+type Account @entity {
   id: Bytes!
   amount: BigInt!
 }
