@@ -1,35 +1,39 @@
+import { Bytes, BigInt, ethereum, log } from "@graphprotocol/graph-ts";
 import {
-  Transfer as TransferEvent,
-  Approval as ApprovalEvent
-} from "../generated/Contract/Contract"
-import { Transfer, Approval } from "../generated/schema"
+  Transfer as TransferEvent
+} from "../generated/Contract/Contract";
+import { Account, Transfer } from "../generated/schema";
 
 export function handleTransfer(event: TransferEvent): void {
-  let entity = new Transfer(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
+  let transfer = new Transfer(
+    event.transaction.hash.toHex()
   )
-  entity.from = event.params.from
-  entity.to = event.params.to
-  entity.value = event.params.value
+  transfer.hash = event.transaction.hash
+  transfer.from = event.params.from
+  transfer.to = event.params.to
+  transfer.amount = event.params.value
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  transfer.blockNumber = event.block.number
+  transfer.timestamp = event.block.timestamp
 
-  entity.save()
-}
+  transfer.save()
 
-export function handleApproval(event: ApprovalEvent): void {
-  let entity = new Approval(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.owner = event.params.owner
-  entity.spender = event.params.spender
-  entity.value = event.params.value
+  let sender = Account.load(transfer.from)
+  let receiver = Account.load(transfer.to)
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  if (receiver == null) {
+    receiver = new Account(transfer.to)
+    receiver.amount = transfer.amount
+    receiver.save()
+  }
+  else {
+    receiver.amount = receiver.amount.plus(transfer.amount)
+    receiver.save()
+  }
 
-  entity.save()
+  if (sender != null) {
+    sender.amount = sender.amount.minus(transfer.amount)
+    sender.save()
+  }
+
 }
